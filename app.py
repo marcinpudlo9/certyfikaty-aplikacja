@@ -153,8 +153,27 @@ df = None
 fields = {}
 columns = ["-- brak --"]
 if excel_file:
-    df = pd.read_excel(excel_file, dtype=str).fillna("")
+    raw_df = pd.read_excel(excel_file, dtype=str).fillna("")
+    st.session_state.setdefault("excel_loaded_name", excel_file.name)
+    if st.session_state.get("excel_loaded_name") != excel_file.name:
+        st.session_state["excel_loaded_name"] = excel_file.name
+        st.session_state.pop("edited_excel_df", None)
+    st.session_state.setdefault("edited_excel_df", raw_df.copy())
+    df = st.session_state["edited_excel_df"]
     columns = ["-- brak --"] + list(df.columns)
+
+
+def build_person_label(row: pd.Series, fields: dict, idx: int) -> str:
+    first = str(row.get(fields.get("first"), "")).strip() if fields.get("first") != "-- brak --" else ""
+    last = str(row.get(fields.get("last"), "")).strip() if fields.get("last") != "-- brak --" else ""
+    npwz = str(row.get(fields.get("npwz"), "")).strip().replace(".0", "") if fields.get("npwz") != "-- brak --" else ""
+    name = " ".join([x for x in [first, last] if x])
+    parts = [f"{idx + 1}"]
+    if name:
+        parts.append(name)
+    if npwz:
+        parts.append(f"NPWZ: {npwz}")
+    return " - ".join(parts)
 
 template_img = None
 if template_file:
@@ -167,8 +186,17 @@ with control_col:
 
     if df is not None:
         st.success(f"Wczytano {len(df)} wierszy")
-        with st.expander("Podglad danych z Excela", expanded=False):
-            st.dataframe(df.head(10), use_container_width=True)
+        with st.expander("Edytowalny podglad danych z Excela", expanded=True):
+            edited_df = st.data_editor(
+                df,
+                num_rows="dynamic",
+                use_container_width=True,
+                key="excel_data_editor",
+            )
+            edited_df = edited_df.fillna("").astype(str)
+            st.session_state["edited_excel_df"] = edited_df
+            df = edited_df
+            columns = ["-- brak --"] + list(df.columns)
 
         fields["first"] = st.selectbox("Kolumna: imie", columns, index=1 if len(columns) > 1 else 0)
         fields["last"] = st.selectbox("Kolumna: nazwisko", columns, index=2 if len(columns) > 2 else 0)
@@ -215,9 +243,16 @@ with preview_col:
     if template_img is not None:
         st.caption(f"Rozmiar szablonu: {template_img.width} x {template_img.height} px")
         if df is not None and len(df) > 0:
-            preview_index = st.slider("Wiersz do podgladu", 0, len(df) - 1, 0)
-            preview = compose_certificate(template_img, df.iloc[preview_index], fields, styles, font_file)
-            st.image(preview, caption="Podglad certyfikatu", use_container_width=True)
+            person_options = list(range(len(df)))
+            selected_person = st.selectbox(
+                "Osoba do podgladu",
+                person_options,
+                format_func=lambda i: build_person_label(df.iloc[i], fields, i),
+                index=min(st.session_state.get("selected_preview_index", 0), len(df) - 1),
+                key="selected_preview_index",
+            )
+            preview = compose_certificate(template_img, df.iloc[selected_person], fields, styles, font_file)
+            st.image(preview, caption=f"Podglad certyfikatu - {build_person_label(df.iloc[selected_person], fields, selected_person)}", use_container_width=True)
 
             action_col1, action_col2 = st.columns(2)
             with action_col1:
