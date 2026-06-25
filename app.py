@@ -213,7 +213,13 @@ with control_col:
         name_style = TextStyle(
             x_pct=st.slider("X imie i nazwisko (%)", 0.0, 100.0, 50.0, 0.1),
             y_pct=st.slider("Y imie i nazwisko (%)", 0.0, 100.0, 48.0, 0.1),
-            size=st.slider("Rozmiar imienia i nazwiska", 8, 120, 48),
+            size=st.number_input(
+                "Rozmiar imienia i nazwiska (px)",
+                min_value=1,
+                max_value=2000,
+                value=48,
+                step=1,
+            ),
             color=st.color_picker("Kolor imienia i nazwiska", "#000000"),
             align=st.selectbox("Wyrownanie imienia i nazwiska", align_options, index=1),
         )
@@ -221,7 +227,13 @@ with control_col:
         npwz_style = TextStyle(
             x_pct=st.slider("X NPWZ (%)", 0.0, 100.0, 50.0, 0.1),
             y_pct=st.slider("Y NPWZ (%)", 0.0, 100.0, 58.0, 0.1),
-            size=st.slider("Rozmiar NPWZ", 8, 80, 26),
+            size=st.number_input(
+                "Rozmiar NPWZ (px)",
+                min_value=1,
+                max_value=2000,
+                value=26,
+                step=1,
+            ),
             color=st.color_picker("Kolor NPWZ", "#000000"),
             align=st.selectbox("Wyrownanie NPWZ", align_options, index=1),
             prefix=st.text_input("Prefix NPWZ", "NPWZ: "),
@@ -230,7 +242,13 @@ with control_col:
         extra_style = TextStyle(
             x_pct=st.slider("X dodatkowe (%)", 0.0, 100.0, 50.0, 0.1),
             y_pct=st.slider("Y dodatkowe (%)", 0.0, 100.0, 66.0, 0.1),
-            size=st.slider("Rozmiar dodatkowego pola", 8, 80, 24),
+            size=st.number_input(
+                "Rozmiar dodatkowego pola (px)",
+                min_value=1,
+                max_value=2000,
+                value=24,
+                step=1,
+            ),
             color=st.color_picker("Kolor dodatkowego pola", "#000000"),
             align=st.selectbox("Wyrownanie dodatkowego pola", align_options, index=1),
             prefix=st.text_input("Prefix dodatkowego pola", ""),
